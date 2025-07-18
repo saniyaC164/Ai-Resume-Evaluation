@@ -1,19 +1,15 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import LandingPage from "./pages/LandingPage";
-import UploadResume from "./pages/UploadResume";
-import ResultsPage from "./pages/ResultsPage";
-import JDMatch from "./pages/JDMatch";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import LoadingPage from './pages/LoadingPage';
+import ResumeResults from './pages/ResumeResults';
 
 function App() {
   return (
     <Router>
-      <Navbar />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/upload" element={<UploadResume />} />
-        <Route path="/results" element={<ResultsPage />} />
-        <Route path="/jd-match" element={<JDMatch />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/loading" element={<LoadingPage />} />
+        <Route path="/results" element={<ResumeResults />} />
       </Routes>
     </Router>
   );
