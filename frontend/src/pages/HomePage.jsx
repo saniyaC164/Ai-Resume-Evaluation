@@ -18,11 +18,30 @@ export default function HomePage() {
     const handleSubmit = async () => {
         if (!resumeFile) return alert("Please upload a resume file");
 
-        // Simulate API call + loading state
-        navigate("/loading");
-        setTimeout(() => {
+        const formData = new FormData();
+        formData.append("resume", resumeFile);
+        if (jobDesc.trim()) {
+            formData.append("job_desc", jobDesc);
+        }
+
+        try {
+            navigate("/loading");  // Show loading animation or page
+
+            const response = await fetch("http://localhost:5000/api/evaluate", {
+                method: "POST",
+                body: formData,
+            });
+
+            const result = await response.json();
+
+            // Save result in localStorage (or use context/state management)
+            localStorage.setItem("evaluationResult", JSON.stringify(result));
+
             navigate("/results");
-        }, 3000);
+        } catch (error) {
+            console.error("Error submitting:", error);
+            alert("Failed to evaluate resume. Please try again.");
+        }
     };
 
     return (
