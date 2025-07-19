@@ -12,8 +12,20 @@ export default function HomePage() {
     const navigate = useNavigate();
 
     const handleFileChange = (e) => {
-        setResumeFile(e.target.files[0]);
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+        if (!allowedTypes.includes(file.type)) {
+            alert("Please upload a valid PDF or Word document.");
+            return;
+        }
+
+        setResumeFile(file);
     };
+
+
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async () => {
         if (!resumeFile) return alert("Please upload a resume file");
@@ -21,11 +33,12 @@ export default function HomePage() {
         const formData = new FormData();
         formData.append("resume", resumeFile);
         if (jobDesc.trim()) {
-            formData.append("job_desc", jobDesc);
+            formData.append("job_description", jobDesc);
         }
 
         try {
-            navigate("/loading");  // Show loading animation or page
+            setLoading(true);
+            navigate("/loading");
 
             const response = await fetch("http://localhost:5000/api/evaluate", {
                 method: "POST",
@@ -33,16 +46,26 @@ export default function HomePage() {
             });
 
             const result = await response.json();
-
-            // Save result in localStorage (or use context/state management)
             localStorage.setItem("evaluationResult", JSON.stringify(result));
+
+            if (result.status === "success") {
+                localStorage.setItem("evaluationResult", JSON.stringify(result));
+                navigate("/results");
+            } else {
+                alert(result.message || "Evaluation failed. Try again.");
+                navigate("/"); // or stay on page
+            }
+
 
             navigate("/results");
         } catch (error) {
             console.error("Error submitting:", error);
             alert("Failed to evaluate resume. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
+
 
     return (
         <div className="min-h-screen flex flex-col">

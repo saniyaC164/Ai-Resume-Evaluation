@@ -1,8 +1,9 @@
 from flask import Flask
-from .routes.evaluator import evaluator_bp
+from flask_cors import CORS
+from app.routes.evaluator import evaluator_bp
 
 def create_app():
     app = Flask(__name__)
-    app.config['UPLOAD_FOLDER'] = 'uploads'
-    app.register_blueprint(evaluator_bp)
+    CORS(app)
+    app.register_blueprint(evaluator_bp, url_prefix="/api")
     return app

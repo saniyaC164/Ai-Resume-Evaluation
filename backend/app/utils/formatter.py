@@ -1,17 +1,43 @@
 import json
 
-def format_output(raw_response):
+def format_output(response_text: str) -> dict:
+    """
+    Parses the Gemini API response and returns a dictionary
+    suitable for sending to the frontend.
+
+    Args:
+        response_text (str): Raw response text from Gemini (should be JSON-formatted)
+
+    Returns:
+        dict: Parsed and validated dictionary with structured resume evaluation
+    """
     try:
-        parsed = json.loads(raw_response)
+        # Try parsing Gemini's response as JSON
+        response_data = json.loads(response_text)
+
+        # Optional: Validate expected keys exist
+        expected_keys = ["Match Score", "Matched Skills", "Missing Skills", 
+                         "ATS Compliance Feedback", "Section-wise Feedback", "Summary and Suggestions"]
+        
+        structured_output = {}
+
+        for key in expected_keys:
+            structured_output[key] = response_data.get(key, "N/A")
+
         return {
-            "matchScore": parsed.get("match_score", 0),
-            "skills": {
-                "matched": parsed.get("matched_skills", []),
-                "missing": parsed.get("missing_skills", [])
-            },
-            "ats": parsed.get("ats_feedback", {}),
-            "sections": parsed.get("section_feedback", {}),
-            "llmSummary": parsed.get("llm_summary", "")
+            "status": "success",
+            "data": structured_output
         }
+
+    except json.JSONDecodeError:
+        # If Gemini didn't return proper JSON
+        return {
+            "status": "error",
+            "message": "Invalid response format from Gemini. Please try again or check resume format."
+        }
+
     except Exception as e:
-        return {"error": "Failed to parse Gemini output", "details": str(e)}
+        return {
+            "status": "error",
+            "message": f"Unexpected error: {str(e)}"
+        }
