@@ -12,20 +12,23 @@ def extract_text_from_pdf(file: FileStorage) -> str:
         str: Extracted plain text from PDF.
     """
     try:
-        # Read the file stream and open as PDF
+        file.stream.seek(0)  # Ensure pointer is at start
         pdf_stream = file.read()
+        print("PDF file size in bytes:", len(pdf_stream))
+
         doc = fitz.open(stream=pdf_stream, filetype="pdf")
 
         text = ""
-        for page in doc:
+        for i, page in enumerate(doc):
             page_text = page.get_text()
+            print(f"Page {i + 1} text length: {len(page_text)}")
             if page_text:
                 text += page_text + "\n"
 
         doc.close()
 
-        return text.strip() if text else "No text could be extracted from the PDF."
+        return text.strip()
 
     except Exception as e:
         print(f"Error extracting PDF text: {e}")
-        return "Error parsing the PDF file. Please ensure it is a valid, readable PDF."
+        return ""

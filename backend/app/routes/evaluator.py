@@ -18,10 +18,18 @@ def evaluate():
     print("------ JOB DESCRIPTION TEXT ------")
     print(jd_text)
 
-    result = evaluate_resume(resume_text, jd_text)
-    output = format_output(result)
-    print(jsonify(output))
-    return jsonify(output)
+    result_text = evaluate_resume(resume_text, jd_text)
+
+    # Format output from Gemini to structured JSON
+    formatted_result = format_output(result_text)
+
+    print("✅ Final structured output to frontend:")
+    print(json.dumps(formatted_result, indent=2))
+
+    return jsonify({
+        "status": "success",
+        "result": formatted_result
+})
 
 @evaluator_bp.route('/test', methods=['GET'])
 def test():

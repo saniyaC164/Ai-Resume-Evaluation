@@ -1,36 +1,30 @@
 import json
+import re
 
 def format_output(response_text: str) -> dict:
-    """
-    Parses the Gemini API response and returns a dictionary
-    suitable for sending to the frontend.
-
-    Args:
-        response_text (str): Raw response text from Gemini (should be JSON-formatted)
-
-    Returns:
-        dict: Parsed and validated dictionary with structured resume evaluation
-    """
     try:
-        # Try parsing Gemini's response as JSON
-        response_data = json.loads(response_text)
-
-        # Optional: Validate expected keys exist
-        expected_keys = ["Match Score", "Matched Skills", "Missing Skills", 
-                         "ATS Compliance Feedback", "Section-wise Feedback", "Summary and Suggestions"]
+        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        if not json_match:
+            raise ValueError("No valid JSON block found in Gemini response.")
         
-        structured_output = {}
+        json_str = json_match.group(0)
+        response_data = json.loads(json_str)
 
-        for key in expected_keys:
-            structured_output[key] = response_data.get(key, "N/A")
+        structured_output = {
+            "score": response_data.get("match_score", "N/A"),
+            "matchedSkills": response_data.get("matched_skills", []),
+            "missingSkills": response_data.get("missing_skills", []),
+            "atsFeedback": response_data.get("ats_feedback", "").split('\n'),
+            "sectionFeedback": response_data.get("section_feedback", {}),
+            "summary": response_data.get("summary", "No summary provided.")
+        }
 
         return {
             "status": "success",
-            "data": structured_output
+            "result": structured_output
         }
 
     except json.JSONDecodeError:
-        # If Gemini didn't return proper JSON
         return {
             "status": "error",
             "message": "Invalid response format from Gemini. Please try again or check resume format."

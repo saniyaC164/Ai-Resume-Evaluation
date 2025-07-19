@@ -5,17 +5,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import axios from "axios";
 
 export default function HomePage() {
     const [resumeFile, setResumeFile] = useState(null);
     const [jobDesc, setJobDesc] = useState("");
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+        const allowedTypes = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ];
         if (!allowedTypes.includes(file.type)) {
             alert("Please upload a valid PDF or Word document.");
             return;
@@ -23,9 +29,6 @@ export default function HomePage() {
 
         setResumeFile(file);
     };
-
-
-    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async () => {
         if (!resumeFile) return alert("Please upload a resume file");
@@ -40,32 +43,23 @@ export default function HomePage() {
             setLoading(true);
             navigate("/loading");
 
-            const response = await fetch("http://localhost:5000/api/evaluate", {
-                method: "POST",
-                body: formData,
-            });
-
-            const result = await response.json();
-            localStorage.setItem("evaluationResult", JSON.stringify(result));
+            const response = await axios.post("/api/evaluate", formData);
+            const result = response.data;
 
             if (result.status === "success") {
-                localStorage.setItem("evaluationResult", JSON.stringify(result));
-                navigate("/results");
+                navigate("/resume-results", { state: { result } });
             } else {
                 alert(result.message || "Evaluation failed. Try again.");
-                navigate("/"); // or stay on page
+                navigate("/");
             }
-
-
-            navigate("/results");
         } catch (error) {
             console.error("Error submitting:", error);
             alert("Failed to evaluate resume. Please try again.");
+            navigate("/");
         } finally {
             setLoading(false);
         }
     };
-
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -90,7 +84,7 @@ export default function HomePage() {
                     />
 
                     <Button onClick={handleSubmit} className="mt-6 w-full">
-                        Submit for Evaluation
+                        {loading ? "Submitting..." : "Submit for Evaluation"}
                     </Button>
                 </div>
             </main>

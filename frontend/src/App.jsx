@@ -9,7 +9,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/loading" element={<LoadingPage />} />
-        <Route path="/results" element={<ResumeResults />} />
+        <Route path="/resume-results" element={<ResumeResults />} />
       </Routes>
     </Router>
   );
