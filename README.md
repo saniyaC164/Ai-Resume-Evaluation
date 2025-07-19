@@ -3,6 +3,7 @@ Revolutionizing recruitment with intelligent resume analysis and ATS optimizatio
 
 🌟 Overview
 The AI-Powered Resume Evaluator is a cutting-edge web application that leverages Google's Gemini 2.5 Flash AI to provide comprehensive resume analysis and optimization suggestions. Built with modern full-stack technologies, it bridges the gap between job seekers and ATS (Applicant Tracking Systems) requirements.
+
 🎯 Problem Statement
 
 73% of resumes are rejected by ATS systems before human review
@@ -11,6 +12,7 @@ Manual resume review is time-intensive for recruiters
 Skills gap analysis is often subjective and inconsistent
 
 💡 Solution
+
 Our AI-driven platform provides instant, actionable feedback on resume content, formatting, and ATS compatibility, empowering users to create compelling applications that pass both automated screening and human review.
 ✨ Key Features
 🔍 Intelligent Analysis Engine
