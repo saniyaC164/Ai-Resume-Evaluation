@@ -1,36 +1,68 @@
+import datetime
+import json
+import logging
 from flask import Blueprint, request, jsonify
+from werkzeug.exceptions import BadRequest
 from app.services.gemini_api import evaluate_resume
-from app.utils.formatter import format_output
 from app.utils.parser import extract_text_from_pdf
 
 evaluator_bp = Blueprint('evaluator', __name__)
+logger = logging.getLogger(__name__)
 
 @evaluator_bp.route('/evaluate', methods=['POST'])
 def evaluate():
-    resume_file = request.files.get('resume')
-    jd_file = request.files.get('job_description')
+    try:
+        # Validate request
+        if not request.files:
+            return jsonify({
+                "status": "error",
+                "message": "No files provided"
+            }), 400
 
-    resume_text = extract_text_from_pdf(resume_file) if resume_file else ''
-    jd_text = jd_file.read().decode('utf-8') if jd_file else ''
+        resume_file = request.files.get('resume')
+        jd_file = request.files.get('job_description')
 
-    print("------ RESUME TEXT ------")
-    print(resume_text[:1000])  # Show first 1000 characters
-    print("------ JOB DESCRIPTION TEXT ------")
-    print(jd_text)
+        if not resume_file:
+            return jsonify({
+                "status": "error", 
+                "message": "Resume file is required"
+            }), 400
 
-    result_text = evaluate_resume(resume_text, jd_text)
+        # Validate file types
+        if resume_file and not resume_file.filename.lower().endswith('.pdf'):
+            return jsonify({
+                "status": "error",
+                "message": "Resume must be a PDF file"
+            }), 400
 
-    # Format output from Gemini to structured JSON
-    formatted_result = format_output(result_text)
+        # Extract text
+        resume_text = extract_text_from_pdf(resume_file) if resume_file else ''
+        if not resume_text.strip():
+            return jsonify({
+                "status": "error",
+                "message": "Could not extract text from resume PDF"
+            }), 400
 
-    print("✅ Final structured output to frontend:")
-    print(json.dumps(formatted_result, indent=2))
+        jd_text = jd_file.read().decode('utf-8') if jd_file else ''
 
-    return jsonify({
-        "status": "success",
-        "result": formatted_result
-})
+        logger.info(f"Processing resume with {len(resume_text)} characters")
+        logger.info(f"Job description has {len(jd_text)} characters")
+
+        # Evaluate resume
+        result = evaluate_resume(resume_text, jd_text)
+        
+        if result.get('status') == 'error':
+            return jsonify(result), 500
+
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"Unexpected error in evaluate endpoint: {str(e)}")
+        return jsonify({
+            "status": "error",
+            "message": "Internal server error occurred"
+        }), 500
 
 @evaluator_bp.route('/test', methods=['GET'])
 def test():
-    return jsonify({'status': 'API working ✅'})
+    return jsonify({'status': 'API working ✅', 'timestamp': str(datetime.utcnow())})

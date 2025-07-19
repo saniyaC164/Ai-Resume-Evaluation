@@ -1,73 +1,127 @@
 import json
 import re
-import google.generativeai as genai  # ✅ Correct import
-
+import logging
+import google.generativeai as genai
 from dotenv import load_dotenv
 import os
+from typing import Dict, Any
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+logger = logging.getLogger(__name__)
 
-# ✅ Use fully-qualified model name
+# Validate API key exists
+api_key = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise ValueError("GEMINI_API_KEY environment variable is required")
+
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel(model_name="models/gemini-2.5-flash")
 
-def evaluate_resume(resume_text: str, jd_text: str = "") -> str:
+def evaluate_resume(resume_text: str, jd_text: str = "") -> Dict[str, Any]:
+    """
+    Evaluates a resume against a job description using Gemini AI.
+    
+    Args:
+        resume_text: The extracted resume text
+        jd_text: The job description text (optional)
+    
+    Returns:
+        Dict containing the evaluation results
+    """
     try:
-        prompt = f"""
-You are an AI Resume Evaluator. Analyze the resume below with respect to the job description (if provided).
+        # Input validation
+        if not resume_text or not resume_text.strip():
+            return {
+                "status": "error",
+                "message": "Resume text is empty or invalid"
+            }
 
-Resume:
+        prompt = create_evaluation_prompt(resume_text, jd_text)
+        
+        # Generate content with retry logic
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = model.generate_content(prompt)
+                raw_text = response.text
+                break
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise e
+                logger.warning(f"Gemini API attempt {attempt + 1} failed: {e}")
+
+        logger.info("Successfully received response from Gemini API")
+        
+        # Parse and structure the response
+        structured_result = parse_gemini_response(raw_text)
+        
+        return {
+            "status": "success",
+            "result": structured_result
+        }
+
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parsing error: {e}")
+        return {
+            "status": "error",
+            "message": "Invalid response format from AI service"
+        }
+    except Exception as e:
+        logger.error(f"Gemini API error: {str(e)}")
+        return {
+            "status": "error", 
+            "message": f"AI service error: {str(e)}"
+        }
+
+def create_evaluation_prompt(resume_text: str, jd_text: str) -> str:
+    """Creates the evaluation prompt for Gemini."""
+    return f"""
+You are an expert ATS (Applicant Tracking System) and HR consultant. Analyze the resume below against the job description.
+
+RESUME:
 {resume_text}
 
-Job Description:
-{jd_text if jd_text else 'N/A'}
+JOB DESCRIPTION:
+{jd_text if jd_text else 'No specific job description provided - provide general resume analysis'}
 
-Provide your output as a strict JSON object with no markdown, no explanation, no text before or after. The JSON should include:
+Provide your analysis as a JSON object with exactly these fields:
+- match_score: integer from 0-100
+- matched_skills: array of skills that match the job requirements  
+- missing_skills: array of important skills missing from the resume
+- ats_feedback: string with specific ATS optimization suggestions
+- section_feedback: object with keys (experience, education, skills, objective) and string values
+- summary: string with overall evaluation summary
 
-- match_score (int, out of 100)
-- matched_skills (list)
-- missing_skills (list)
-- ats_feedback (str)
-- section_feedback (dict: experience, education, skills, objective)
-- summary (str)
-
-Respond only with valid JSON.
+Respond ONLY with valid JSON, no markdown formatting.
 """
 
-        # Generate content
-        response = model.generate_content(prompt)
-        raw_text = response.text
-
-        print("📄 Raw Gemini Output:")
-        print(raw_text[:1000])
-
-        # Clean output (remove ```json if present)
+def parse_gemini_response(raw_text: str) -> Dict[str, Any]:
+    """Parses and structures the Gemini API response."""
+    try:
+        # Clean the response
         cleaned_text = re.sub(r"^```(?:json)?|```$", "", raw_text.strip(), flags=re.MULTILINE)
-
-        # Parse to dict
-        parsed_output = json.loads(cleaned_text)
-
-        # Map Gemini's keys to frontend-expected structure
-        structured_output = {
-            "score": parsed_output.get("match_score", "N/A"),
-            "matchedSkills": parsed_output.get("matched_skills", []),
-            "missingSkills": parsed_output.get("missing_skills", []),
-            "atsFeedback": parsed_output.get("ats_feedback", "").split('\n'),  # split str → list
-            "sectionFeedback": parsed_output.get("section_feedback", {}),
-            "llmSummary": parsed_output.get("summary", "No summary provided.")
-    }
-        print("✅ Final structured output to frontend:")
-        print(json.dumps(structured_output, indent=2))
-
-        return json.dumps(structured_output)
+        parsed_data = json.loads(cleaned_text)
         
-
-
-    except json.JSONDecodeError:
-        print("❌ Gemini response was not valid JSON.")
-        return json.dumps({"error": "Invalid response format from Gemini. Please try again or check resume format."})
-
+        # Structure the output for frontend
+        return {
+            "score": parsed_data.get("match_score", 0),
+            "matchedSkills": parsed_data.get("matched_skills", []),
+            "missingSkills": parsed_data.get("missing_skills", []),
+            "atsFeedback": parse_feedback_text(parsed_data.get("ats_feedback", "")),
+            "sectionFeedback": parsed_data.get("section_feedback", {}),
+            "llmSummary": parsed_data.get("summary", "No summary available")
+        }
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse Gemini response as JSON: {e}")
+        raise
     except Exception as e:
-        print(f"❌ Unexpected error in Gemini API: {str(e)}")
-        return json.dumps({"error": f"Unexpected error: {str(e)}"})
-    
+        logger.error(f"Error structuring response: {e}")
+        raise
+
+def parse_feedback_text(feedback: str) -> list:
+    """Converts feedback string to list format for frontend."""
+    if isinstance(feedback, list):
+        return feedback
+    if isinstance(feedback, str) and feedback.strip():
+        return [line.strip() for line in feedback.split('\n') if line.strip()]
+    return ["No specific feedback available"]
