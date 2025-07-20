@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import axios from "axios";
 
-export default function HomePage() {
+export default function UploadPage() {
     const [resumeFile, setResumeFile] = useState(null);
     const [jobDesc, setJobDesc] = useState("");
     const [loading, setLoading] = useState(false);

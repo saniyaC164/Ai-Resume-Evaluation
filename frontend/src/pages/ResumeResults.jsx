@@ -61,6 +61,72 @@ const ResumeResults = () => {
         "⚠️": "text-yellow-600",
     };
 
+    const downloadReport = () => {
+        const reportData = {
+            score: normalizedScore,
+            matchedSkills: normalizedMatchedSkills,
+            missingSkills: normalizedMissingSkills,
+            atsFeedback: normalizedAtsFeedback,
+            recommendations: normalizedRecommendations,
+            sectionFeedback: normalizedSectionFeedback,
+            summary: normalizedSummary,
+            strengths,
+            weaknesses,
+            generatedAt: new Date().toLocaleString()
+        };
+
+        // Create a formatted report content
+        const reportContent = `
+    RESUME EVALUATION REPORT
+    Generated: ${reportData.generatedAt}
+    ==================================================
+
+    OVERALL MATCH SCORE: ${typeof normalizedScore === "number" ? Math.round(normalizedScore) : normalizedScore}%
+
+    MATCHED SKILLS:
+    ${normalizedMatchedSkills?.map(skill => `• ${skill}`).join('\n') || 'None identified'}
+
+    MISSING SKILLS:
+    ${normalizedMissingSkills?.map(skill => `• ${skill}`).join('\n') || 'None identified'}
+
+    ${strengths?.length > 0 ? `
+    STRENGTHS:
+    ${strengths.map(strength => `• ${strength}`).join('\n')}
+    ` : ''}
+
+    ${weaknesses?.length > 0 ? `
+    AREAS FOR IMPROVEMENT:
+    ${weaknesses.map(weakness => `• ${weakness}`).join('\n')}
+    ` : ''}
+
+    ${normalizedRecommendations?.length > 0 ? `
+    RECOMMENDATIONS:
+    ${normalizedRecommendations.map(rec => `• ${rec}`).join('\n')}
+    ` : ''}
+
+   ${Object.keys(normalizedSectionFeedback || {}).length > 0 ? `
+   SECTION FEEDBACK:
+   ${Object.entries(normalizedSectionFeedback).map(([section, feedback]) =>
+            `${section.toUpperCase()}: ${feedback}`
+        ).join('\n\n')}
+    ` : ''}
+
+    AI SUMMARY:
+    ${normalizedSummary || 'No summary available'}
+    `;
+
+        // Create and download the file
+        const blob = new Blob([reportContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `resume-evaluation-report-${new Date().toISOString().split('T')[0]}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Navbar */}
@@ -156,13 +222,34 @@ const ResumeResults = () => {
                 {normalizedAtsFeedback && normalizedAtsFeedback.length > 0 && (
                     <div className="bg-white rounded-xl shadow-md p-6">
                         <h3 className="text-lg font-semibold mb-4 text-gray-800">ATS Compliance Summary</h3>
-                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-gray-800">
-                            {normalizedAtsFeedback.map((item, i) => {
-                                const prefix = item.trim().slice(0, 2);
-                                const color = atsColors[prefix] || "text-gray-600";
-                                return <li key={i} className={color}>{item}</li>;
-                            })}
-                        </ul>
+
+                        {/* Check if the feedback is in paragraph format or list format */}
+                        {normalizedAtsFeedback.length === 1 && !normalizedAtsFeedback[0].includes('✔️') && !normalizedAtsFeedback[0].includes('❌') && !normalizedAtsFeedback[0].includes('⚠️') ? (
+                            // If it's a single paragraph response from backend
+                            <div className="text-gray-700 leading-relaxed text-left whitespace-pre-line">
+                                {normalizedAtsFeedback[0]}
+                            </div>
+                        ) : (
+                            // If it's a list of feedback items with icons
+                            <div className="space-y-3">
+                                {normalizedAtsFeedback.map((item, i) => {
+                                    const trimmedItem = item.trim();
+                                    const prefix = trimmedItem.slice(0, 2);
+                                    const color = atsColors[prefix] || "text-gray-600";
+
+                                    return (
+                                        <div key={i} className={`${color} flex items-start text-left leading-relaxed`}>
+                                            <span className="flex-shrink-0 mr-3 text-lg">
+                                                {prefix === "✔️" ? "✔️" : prefix === "❌" ? "❌" : prefix === "⚠️" ? "⚠️" : "•"}
+                                            </span>
+                                            <span className="text-gray-700 flex-1">
+                                                {trimmedItem.replace(/^[✔️❌⚠️]\s*/, "")}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -187,9 +274,11 @@ const ResumeResults = () => {
                         <h3 className="text-lg font-semibold mb-4 text-gray-800">Resume Section Feedback</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                             {Object.entries(normalizedSectionFeedback).map(([section, feedback], i) => (
-                                <div key={i} className="bg-blue-50 p-3 rounded-md">
-                                    <h4 className="font-semibold text-gray-700 mb-1 capitalize">{section}</h4>
-                                    <p className="text-sm text-gray-600">{feedback || "No feedback provided."}</p>
+                                <div key={i} className="bg-blue-50 p-4 rounded-md">
+                                    <h4 className="font-semibold text-gray-700 mb-2 capitalize">{section}</h4>
+                                    <p className="text-sm text-gray-600 leading-relaxed text-left">
+                                        {feedback || "No feedback provided."}
+                                    </p>
                                 </div>
                             ))}
                         </div>
@@ -201,7 +290,7 @@ const ResumeResults = () => {
                     <h3 className="text-lg font-semibold mb-4 text-gray-800">
                         AI Summary & Suggestions
                     </h3>
-                    <div className="text-gray-700 whitespace-pre-line">
+                    <div className="text-gray-700 whitespace-pre-line text-left leading-relaxed">
                         {normalizedSummary && normalizedSummary.trim()
                             ? normalizedSummary
                             : "No detailed summary provided by the AI model."}
@@ -217,10 +306,13 @@ const ResumeResults = () => {
                         Analyze Another Resume
                     </Link>
                     <button
-                        className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition"
-                        onClick={() => alert("Download functionality coming soon!")}
+                        className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition flex items-center space-x-2"
+                        onClick={downloadReport}
                     >
-                        Download Full Report
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        <span>Download Full Report</span>
                     </button>
                 </div>
             </div>

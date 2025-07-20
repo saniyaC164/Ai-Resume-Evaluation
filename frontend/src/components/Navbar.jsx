@@ -6,8 +6,8 @@ export default function Navbar() {
             <h1 className="text-xl font-bold text-blue-600">AI Resume Evaluator</h1>
             <ul className="flex space-x-6 text-gray-700 font-medium">
                 <li><Link to="/">Home</Link></li>
-                <li><Link to="#">Features</Link></li>
-                <li><Link to="#">About</Link></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#about">About</a></li>
                 <li><Link to="#">Contact</Link></li>
             </ul>
         </nav>
