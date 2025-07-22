@@ -3,7 +3,9 @@
 Revolutionizing recruitment with intelligent resume analysis and ATS optimization
 
 <img width="1919" height="1045" alt="Screenshot 2025-07-20 230549" src="https://github.com/user-attachments/assets/03e0dea2-3b3f-4f13-8805-896163f5c6e8" />
-<img width="1920" height="1140" alt="Screenshot 2025-07-22 234532" src="https://github.com/user-attachments/assets/497f3596-6f53-4721-b726-8c86ebd1f6ff" />
+<img width="1920" height="1086" alt="Screenshot 2025-07-22 234532" src="https://github.com/user-attachments/assets/8443c429-f76d-471a-a2b4-bf68fcb45e63" />
+
+
 <img width="1919" height="1033" alt="Screenshot 2025-07-22 235307" src="https://github.com/user-attachments/assets/a7c3d7f3-d9c2-494c-8760-b48e38cbb114" />
 <img width="1920" height="1140" alt="Screenshot 2025-07-22 235039" src="https://github.com/user-attachments/assets/0e942de6-0c9e-4108-91ef-75e92429a57e" />
 <img width="1919" height="1035" alt="Screenshot 2025-07-22 235110" src="https://github.com/user-attachments/assets/329d6fb6-4c3d-442a-94ad-3ebe75d2e438" />
