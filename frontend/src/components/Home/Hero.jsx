@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-
+import illustration from '../assets/illustration.png';
 
 const Hero = () => {
     const navigate = useNavigate();
@@ -23,7 +23,7 @@ const Hero = () => {
                 </button>
             </div>
             <img
-                src="src/assets/illustration.png"
+                src={illustration}
                 alt="Illustration"
                 className="mt-12 w-full max-w-4xl mx-auto rounded-xl"
             />

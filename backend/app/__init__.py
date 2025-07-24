@@ -6,9 +6,10 @@ import logging
 def create_app():
     app = Flask(__name__)
     CORS(app, origins=[
-    'http://localhost:3000',
-    'https://ai-resume-evaluation.vercel.app/'
-])
+        'http://localhost:3000',
+        'http://localhost:5173',  # Vite dev server
+        'https://ai-resume-evaluation.vercel.app'  # Vercel URL
+    ])
     
     # Configure logging
     logging.basicConfig(level=logging.INFO)
