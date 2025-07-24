@@ -5,7 +5,10 @@ import logging
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, origins=[
+    'http://localhost:3000',
+    'https://ai-resume-evaluation.vercel.app/'
+])
     
     # Configure logging
     logging.basicConfig(level=logging.INFO)
