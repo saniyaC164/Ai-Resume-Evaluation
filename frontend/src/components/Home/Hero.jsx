@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import illustration from '../assets/illustration.png';
+import illustration from 'src/assets/illustration.png';
 
 const Hero = () => {
     const navigate = useNavigate();
