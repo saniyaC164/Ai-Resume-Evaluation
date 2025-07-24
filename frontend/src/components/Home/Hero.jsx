@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 
-
 const Hero = () => {
     const navigate = useNavigate();
+    const illustration = ''
     return (
         <section className="text-center py-16 bg-gray-50">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -23,7 +23,7 @@ const Hero = () => {
                 </button>
             </div>
             <img
-                src='/illustration.png'
+                src="/illustration.png"
                 alt="Illustration"
                 className="mt-12 w-full max-w-4xl mx-auto rounded-xl"
             />
