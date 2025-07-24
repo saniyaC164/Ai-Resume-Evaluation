@@ -19,11 +19,11 @@ const Hero = () => {
                     Get Started Free
                 </button>
                 <button className="border border-blue-600 text-blue-600 px-6 py-2 rounded-md hover:bg-blue-50">
-                    Learn More
+                    <a href='#features'>Learn More</a>
                 </button>
             </div>
             <img
-                src="/assets/illustration.png"
+                src="src/assets/illustration.png"
                 alt="Illustration"
                 className="mt-12 w-full max-w-4xl mx-auto rounded-xl"
             />
