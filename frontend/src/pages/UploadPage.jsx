@@ -15,7 +15,7 @@ export default function UploadPage() {
     const navigate = useNavigate();
 
     // Fixed: Move API_BASE_URL inside component or create config file
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "https://ai-resume-evaluator-backend-7msi.onrender.com";
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
