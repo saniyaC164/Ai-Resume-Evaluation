@@ -1,11 +1,12 @@
 🎯 AI-Powered Resume Evaluator
 
 Revolutionizing recruitment with intelligent resume analysis and ATS optimization
+
 Try it: https://ai-resume-evaluation.vercel.app/
+
 <img width="1919" height="1045" alt="Screenshot 2025-07-20 230549" src="https://github.com/user-attachments/assets/03e0dea2-3b3f-4f13-8805-896163f5c6e8" />
 
 <img width="1920" height="1086" alt="Screenshot 2025-07-22 234532" src="https://github.com/user-attachments/assets/8443c429-f76d-471a-a2b4-bf68fcb45e63" />
-
 
 <img width="1919" height="1033" alt="Screenshot 2025-07-22 235307" src="https://github.com/user-attachments/assets/a7c3d7f3-d9c2-494c-8760-b48e38cbb114" />
 
