@@ -1,5 +1,6 @@
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
+import jsPDF from 'jspdf';
 
 const ResumeResults = () => {
     const location = useLocation();
@@ -75,56 +76,183 @@ const ResumeResults = () => {
             generatedAt: new Date().toLocaleString()
         };
 
-        // Create a formatted report content
-        const reportContent = `
-    RESUME EVALUATION REPORT
-    Generated: ${reportData.generatedAt}
-    ==================================================
+        // Create new PDF document
+        const pdf = new jsPDF();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const margin = 20;
+        let yPosition = 20;
 
-    OVERALL MATCH SCORE: ${typeof normalizedScore === "number" ? Math.round(normalizedScore) : normalizedScore}%
+        // Helper function to add text with word wrapping
+        const addTextWithWrapping = (text, x, y, maxWidth, fontSize = 12) => {
+            pdf.setFontSize(fontSize);
+            const lines = pdf.splitTextToSize(text, maxWidth);
+            pdf.text(lines, x, y);
+            return y + (lines.length * (fontSize * 0.5));
+        };
 
-    MATCHED SKILLS:
-    ${normalizedMatchedSkills?.map(skill => `• ${skill}`).join('\n') || 'None identified'}
+        // Helper function to check if we need a new page
+        const checkNewPage = (currentY, requiredHeight = 20) => {
+            if (currentY + requiredHeight > pdf.internal.pageSize.getHeight() - margin) {
+                pdf.addPage();
+                return margin;
+            }
+            return currentY;
+        };
 
-    MISSING SKILLS:
-    ${normalizedMissingSkills?.map(skill => `• ${skill}`).join('\n') || 'None identified'}
+        // Title
+        pdf.setFontSize(18);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('RESUME EVALUATION REPORT', pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 15;
 
-    ${strengths?.length > 0 ? `
-    STRENGTHS:
-    ${strengths.map(strength => `• ${strength}`).join('\n')}
-    ` : ''}
+        // Generated date
+        pdf.setFontSize(10);
+        pdf.setFont(undefined, 'normal');
+        pdf.text(`Generated: ${reportData.generatedAt}`, pageWidth / 2, yPosition, { align: 'center' });
+        yPosition += 20;
 
-    ${weaknesses?.length > 0 ? `
-    AREAS FOR IMPROVEMENT:
-    ${weaknesses.map(weakness => `• ${weakness}`).join('\n')}
-    ` : ''}
+        // Overall Score
+        yPosition = checkNewPage(yPosition, 30);
+        pdf.setFontSize(14);
+        pdf.setFont(undefined, 'bold');
+        pdf.text('OVERALL MATCH SCORE', margin, yPosition);
+        yPosition += 10;
 
-    ${normalizedRecommendations?.length > 0 ? `
-    RECOMMENDATIONS:
-    ${normalizedRecommendations.map(rec => `• ${rec}`).join('\n')}
-    ` : ''}
+        pdf.setFontSize(24);
+        pdf.setTextColor(0, 100, 200);
+        const scoreText = typeof normalizedScore === "number" ? `${Math.round(normalizedScore)}%` : 'N/A';
+        pdf.text(scoreText, margin, yPosition);
+        pdf.setTextColor(0, 0, 0);
+        yPosition += 20;
 
-   ${Object.keys(normalizedSectionFeedback || {}).length > 0 ? `
-   SECTION FEEDBACK:
-   ${Object.entries(normalizedSectionFeedback).map(([section, feedback]) =>
-            `${section.toUpperCase()}: ${feedback}`
-        ).join('\n\n')}
-    ` : ''}
+        // Matched Skills
+        if (normalizedMatchedSkills?.length > 0) {
+            yPosition = checkNewPage(yPosition, 30);
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('MATCHED SKILLS', margin, yPosition);
+            yPosition += 10;
 
-    AI SUMMARY:
-    ${normalizedSummary || 'No summary available'}
-    `;
+            pdf.setFontSize(11);
+            pdf.setFont(undefined, 'normal');
+            normalizedMatchedSkills.forEach(skill => {
+                yPosition = checkNewPage(yPosition, 8);
+                pdf.text(`• ${skill}`, margin + 5, yPosition);
+                yPosition += 7;
+            });
+            yPosition += 5;
+        }
 
-        // Create and download the file
-        const blob = new Blob([reportContent], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `resume-evaluation-report-${new Date().toISOString().split('T')[0]}.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        // Missing Skills
+        if (normalizedMissingSkills?.length > 0) {
+            yPosition = checkNewPage(yPosition, 30);
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('MISSING SKILLS', margin, yPosition);
+            yPosition += 10;
+
+            pdf.setFontSize(11);
+            pdf.setFont(undefined, 'normal');
+            normalizedMissingSkills.forEach(skill => {
+                yPosition = checkNewPage(yPosition, 8);
+                pdf.text(`• ${skill}`, margin + 5, yPosition);
+                yPosition += 7;
+            });
+            yPosition += 5;
+        }
+
+        // Strengths
+        if (strengths?.length > 0) {
+            yPosition = checkNewPage(yPosition, 30);
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('STRENGTHS', margin, yPosition);
+            yPosition += 10;
+
+            pdf.setFontSize(11);
+            pdf.setFont(undefined, 'normal');
+            strengths.forEach(strength => {
+                yPosition = checkNewPage(yPosition, 8);
+                pdf.text(`• ${strength}`, margin + 5, yPosition);
+                yPosition += 7;
+            });
+            yPosition += 5;
+        }
+
+        // Areas for Improvement
+        if (weaknesses?.length > 0) {
+            yPosition = checkNewPage(yPosition, 30);
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('AREAS FOR IMPROVEMENT', margin, yPosition);
+            yPosition += 10;
+
+            pdf.setFontSize(11);
+            pdf.setFont(undefined, 'normal');
+            weaknesses.forEach(weakness => {
+                yPosition = checkNewPage(yPosition, 8);
+                pdf.text(`• ${weakness}`, margin + 5, yPosition);
+                yPosition += 7;
+            });
+            yPosition += 5;
+        }
+
+        // Recommendations
+        if (normalizedRecommendations?.length > 0) {
+            yPosition = checkNewPage(yPosition, 30);
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('RECOMMENDATIONS', margin, yPosition);
+            yPosition += 10;
+
+            pdf.setFontSize(11);
+            pdf.setFont(undefined, 'normal');
+            normalizedRecommendations.forEach(rec => {
+                yPosition = checkNewPage(yPosition, 15);
+                yPosition = addTextWithWrapping(`• ${rec}`, margin + 5, yPosition, pageWidth - margin - 10, 11);
+                yPosition += 3;
+            });
+            yPosition += 5;
+        }
+
+        // Section Feedback
+        if (Object.keys(normalizedSectionFeedback || {}).length > 0) {
+            yPosition = checkNewPage(yPosition, 30);
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('SECTION FEEDBACK', margin, yPosition);
+            yPosition += 10;
+
+            Object.entries(normalizedSectionFeedback).forEach(([section, feedback]) => {
+                yPosition = checkNewPage(yPosition, 25);
+                pdf.setFontSize(12);
+                pdf.setFont(undefined, 'bold');
+                pdf.text(section.toUpperCase() + ':', margin + 5, yPosition);
+                yPosition += 8;
+
+                pdf.setFontSize(11);
+                pdf.setFont(undefined, 'normal');
+                yPosition = addTextWithWrapping(feedback || 'No feedback provided.', margin + 5, yPosition, pageWidth - margin - 10, 11);
+                yPosition += 10;
+            });
+        }
+
+        // AI Summary
+        if (normalizedSummary) {
+            yPosition = checkNewPage(yPosition, 30);
+            pdf.setFontSize(14);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('AI SUMMARY & SUGGESTIONS', margin, yPosition);
+            yPosition += 10;
+
+            pdf.setFontSize(11);
+            pdf.setFont(undefined, 'normal');
+            yPosition = addTextWithWrapping(normalizedSummary, margin + 5, yPosition, pageWidth - margin - 10, 11);
+        }
+
+        // Save the PDF
+        const fileName = `resume-evaluation-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        pdf.save(fileName);
     };
 
     return (

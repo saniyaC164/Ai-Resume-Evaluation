@@ -2,5 +2,7 @@
 .env
 node_modules
 _pycache_
-app/_pycache_
-app/routes/_pycache_
+backend/app/_pycache_
+backend/app/routes/_pycache_
+backend/app/utils/_pycache_
+backend/app/services/_pycache_
